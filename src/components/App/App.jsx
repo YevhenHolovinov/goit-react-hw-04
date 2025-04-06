@@ -66,8 +66,8 @@ export default function App() {
 
 	const isActive = useMemo(() => page === totalPages, [page, totalPages]);
 
-	const openModal = (gallery) => {
-		setIsOpen(gallery);        
+	const openModal = () => {
+		setIsOpen(true);        
 	};
 
 	const closeModal = () => {

@@ -2,7 +2,9 @@ import Modal from 'react-modal';
 
 import css from './ImageModul.module.css';
 
+
 export default function ImageModal  ({ modalIsOpen, closeModal, src, alt })  {
+    
 	return (
 		<Modal
 			isOpen={modalIsOpen}
