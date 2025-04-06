@@ -1,154 +1,106 @@
-// import { useEffect, useState } from "react";
-// import  ArticleList from '../ArticleList/ArticleList';
-// import { fetchArticlesWithTopic } from "../../components/Articles-api/Articles-api";
-// import SearchForm from '../SearchForm/SearchForm';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
-// const App = () => {
-//   const [articles, setArticles] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState(false);
-//   const handleSearch = async (topic) => {
-//     try {
-//       setArticles([]);
-//       setError(false);
-//       setLoading(true);
-//       const data = await fetchArticlesWithTopic(topic);
-//       setArticles(data);
-//     } catch (error) {
-//       setError(true);
-//     } finally {
-//       setLoading(false);
-//     }
+import './App.module.css';
+import fetchGalleryPhotos from '../../Photo-Search';
 
+import SearchBar from '../SearchBar/SearchBar';
+import ImageGallery from '../ImageGallery/ImageGallery';
+import Loader from '../Loader/Loader';
+import ErrorMessage from '../ErrorMessage/ErrorMessage';
+import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
+import ImageModal from '../ImageModal/ImageModal';
 
-//   };
+export default function App() {
+	const [page, setPage] = useState(1);
+	const [queryValue, setQueryValue] = useState('');
+	const [gallery, setGallery] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isError, setIsError] = useState(false);
+	const [totalPages, setTotalPages] = useState(0);
 
-//   return (
-//     <div>
-//       <h1>Latest articles</h1>
-//       <SearchForm onSearch={handleSearch} />
-//       {loading && <p>Loading data, please wait...</p>}
-//       {error && (
-//         <p>Whoops, something went wrong! Please try reloading this page!</p>
-//       )}
+	const [modalIsOpen, setIsOpen] = useState(false);
+	const [modalImage, setModalImage] = useState('');
+	const [altDescription, setAltDescription] = useState('');
 
-//       {articles.length > 0 && <ArticleList items={articles} />}
-//     </div>
-//   );
-// };
-///////////////////////////////////////
+	const ref = useRef();
 
-// import { useEffect, useState, useRef } from "react";
+	useEffect(() => {
+		if (queryValue === '') return;
 
-// const App = () => {
-//   const [value, setValue] = useState(0);
-//   const btnRef = useRef();
+		const handleSearch = async () => {
+			try {
+				setIsLoading(true);
+				setIsError(false);
+				const data = await fetchGalleryPhotos(queryValue, page);
+				console.log('data: ', data);
+				if (data.total === 0) return;
+				setGallery((prevGallery) => {
+					return [...prevGallery, ...data.results];
+				});
+				setTotalPages(data.total_pages);
+			} catch (error) {
+				setIsError(true);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+		handleSearch();
+	}, [page, queryValue]);
 
-//   // Буде undefined на першому рендері
-//   // і посиланням на DOM-елемент всі наступні
-//   console.log("App: ", btnRef.current);
+	useEffect(() => {
+		if (page === 1) return;
 
-//   useEffect(() => {
-//     // Ефект виконується після монтування,
-//     // тому завжди буде посиланням на DOM-елемент
-//     console.log("useEffect: ", btnRef.current);
-//   });
+		ref.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+	}, [page, gallery]);
 
-//   const handleClick = () => {
-//     // Кліки будуть після монтування,
-//     // тому завжди буде посиланням на DOM-елемент
-//     console.log("handleClick: ", btnRef.current);
-//   };
+	const handleQuery = (newQuery) => {
+		setQueryValue(newQuery);
+		setGallery([]);
+		setPage(1);
+	};
 
-//   return (
-//     <>
-//       <button onClick={() => setValue(value + 1)}>
-//         Update value to trigger re-render
-//       </button>
-//       <button ref={btnRef} onClick={handleClick}>
-//         Button with ref
-//       </button>
-//     </>
-//   );
-// };
+	const handleLoadMore = () => {
+		setPage(page + 1);
+	};
 
-////////////////////////////////////////////////////
+	const isActive = useMemo(() => page === totalPages, [page, totalPages]);
 
-// import { useEffect, useRef } from "react";
+	const openModal = (gallery) => {
+		setIsOpen(gallery);        
+	};
 
-// const App = () => {
-//   const valueRef = useRef(0);
+	const closeModal = () => {
+		setIsOpen(false);
+	};
 
-//   useEffect(() => {
-//     // Виконається лише один раз під час монтування.
-//     // Наступні оновлення значення рефа не
-//     // викличуть оновлення компонента
-//     console.log(valueRef.current);
-//   });
+	const updateModalStateData = (src, alt) => {
+		setModalImage(src);
+		setAltDescription(alt);
+	};
 
-//   const handleClick = () => {
-//     valueRef.current += 1;
-//   };
-
-//   return <button onClick={handleClick}>Click to update ref value</button>;
-// };
-
-////////////////////////////////////////////
-
-import { useRef } from "react";
-
-const Player = ({ source }) => {
-  const playerRef = useRef();
-
-  const play = () => playerRef.current.play();
-
-  const pause = () => playerRef.current.pause();
-
-  return (
-    <div>
-      <video ref={playerRef} src={source}>
-        Sorry, your browser does not support embedded videos.
-      </video>
-      <div>
-        <button onClick={play}>Play</button>
-        <button onClick={pause}>Pause</button>
-      </div>
-    </div>
-  );
-};
-
-const App = () => {
-  return <Player source="http://media.w3.org/2010/05/sintel/trailer.mp4" />;
-};
-
-///////////////////////////
-
-// ComponentA.jsx
-// import { useToggle } from "../hooks/useToggle.js";
-
-// const ComponentA = () => {
-//   const { isOpen, open, close } = useToggle();
-
-//   return (
-//     <>
-//       <button onClick={open}>Open modal</button>
-//       <Modal isOpen={isOpen} onClose={close} />
-//     </>
-//   );
-// };
-
-// ComponentB.jsx
-// import { useToggle } from "../hooks/useToggle.js";
-
-// const ComponentB = () => {
-//   const { isOpen, open, close } = useToggle();
-
-//   return (
-//     <>
-// 	  <button onClick={open}>Open sidebar</button>
-//       <Sidebar isOpen={isOpen} onClose={close} />
-//     </>
-//   );
-// };
-
-export default App;
+	return (
+		<div ref={ref}>
+			<SearchBar onSubmit={handleQuery} />
+			{gallery.length > 0 && (
+				<ImageGallery
+					gallery={gallery}
+					openModal={openModal}
+					updateModalStateData={updateModalStateData}
+				/>
+			)}
+			{isLoading && <Loader />}
+			{isError && <ErrorMessage />}
+			{gallery.length > 0 && !isLoading && !isError && (
+				<LoadMoreBtn handleLoadMore={handleLoadMore} isActive={isActive} />
+			)}
+			<ImageModal
+				modalIsOpen={modalIsOpen}
+				closeModal={closeModal}
+				src={modalImage}
+				alt={altDescription}
+			/>
+			<Toaster position='top-right' reverseOrder={true} />
+		</div>
+	);
+}
